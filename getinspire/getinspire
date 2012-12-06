@@ -3,17 +3,18 @@
 Get inspire (http://inspirehep.net) records to fill the bibliography of a LaTeX file
 
 BibTeX is assumed as the default format of the LaTeX file.
-The bib file name is obtained from the LaTeX file and the
-missing BibTeX records from inspire are appended there.
+The bib file name is obtained from the LaTeX file. The
+missing BibTeX records are ontained from inspire and appended
+to the bib file.
 
 The program requires the \cite key in the "texkey" format
-of inspire (Lastname:yearcode). However if a \cite has an
-eprint number as key like hep-ph/0213456 or 1206:0001, it will
-be automatically converted to a "texkey" and both the LaTeX
+of inspire (Lastname:yearCODE). However if a \cite has an
+eprint number as key, like hep-ph/0213456 or 1206:0001, it will
+be automatically converted to a "texkey". Then both the LaTeX
 file and the bib file will be updated.
 
 The BibTeX bbl generated file can be changed by one with The
-LaTeX records inspire format (see --bbl option)
+LaTeX records with the inspire format (see --bbl option)
 
 The \\begin{thebibliography} format can be also processed with
 the output in an external bbl file (see -t option)
@@ -48,7 +49,7 @@ def checkfind(s):
     find={}
     if re.search(r'[0-9]{4}\.[0-9]{4}',s) or re.search(r'[a-z\-\/]*[0-9]{7}',s):
         find['eprint']=s
-    elif re.search('[a-zA-Z]*:[0-9a-z]*',s):
+    elif re.search('[a-zA-Z\']*:[0-9a-z]*',s):
         find['texkey']=s
     else:
         find['other']=s
@@ -146,7 +147,7 @@ class Cite:
         return self.replace(eprint,texkey,s)
 
     def ExtractTexkeys(self,s):
-        list=[re.sub(':::','',k).split(',') for  k in [j.group() for j in [re.search(':::(.*):::',i) for i in re.sub(r'\\cite{([a-zA-Z:0-9,\/\-._]*)}','\n:::\\1:::\n',s).split('\n')] if j]]
+        list=[re.sub(':::','',k).split(',') for  k in [j.group() for j in [re.search(':::(.*):::',i) for i in re.sub(r'\\cite{([a-zA-Z:0-9,\/\-._\']*)}','\n:::\\1:::\n',s).split('\n')] if j]]
         for i in list: 
             for j in i:
                 if not self.texkey.has_key(j):
@@ -156,18 +157,18 @@ class Cite:
         self.texkeylist=self.texkey.keys()
         
     def replace(self,eprint,texkey,s):
-        s=re.sub(r'(\\cite{[a-zA-Z:0-9,\/\-._]*)%s([a-zA-Z:0-9,\/\-._]*})' %eprint,r'\1%s\2' %texkey,s)
+        s=re.sub(r'(\\cite{[a-zA-Z\':0-9,\/\-._\']*)%s([a-zA-Z\':0-9,\/\-._\']*})' %eprint,r'\1%s\2' %texkey,s)
         return s
     
 
 def replaceeprint(eprint,texkey,s):
-    s=re.sub(r'(\\cite{[a-zA-Z:0-9,\/\-._]*)%s([a-zA-Z:0-9,\/\-._]*})' %eprint,r'\1%s\2' %texkey,s)
+    s=re.sub(r'(\\cite{[a-zA-Z\':0-9,\/\-._\']*)%s([a-zA-Z\':0-9,\/\-._\']*})' %eprint,r'\1%s\2' %texkey,s)
     return s
 
 
 def ExtractBibkeys(s):
     texkey={}
-    list=[re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\@[Aa]rticle{([a-zA-Z]*:[0-9a-z]*)',r':::\1:::',s).split('\n')] if j]
+    list=[re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\@[Aa]rticle{([a-zA-Z\']*:[0-9a-z]*)',r':::\1:::',s).split('\n')] if j]
     for i in list: 
         if not texkey.has_key(i):
                 texkey[i]=''
@@ -176,7 +177,7 @@ def ExtractBibkeys(s):
 
 
 def ExtractBibitemkeys(s):
-    return [re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\\bibitem{([a-zA-Z]*:[0-9a-z]*)}',r':::\1:::',s).split('\n')] if j]
+    return [re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\\bibitem{([a-zA-Z\']*:[0-9a-z]*)}',r':::\1:::',s).split('\n')] if j]
 
 def list2dict(l):
     d={}
