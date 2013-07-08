@@ -49,7 +49,7 @@ def checkfind(s):
     find={}
     if re.search(r'[0-9]{4}\.[0-9]{4}',s) or re.search(r'[a-z\-\/]*[0-9]{7}',s):
         find['eprint']=s
-    elif re.search('[a-zA-Z\']*:[0-9a-z]*',s):
+    elif re.search('[a-zA-Z\'\.]*:[0-9a-z]*',s):
         find['texkey']=s
     else:
         find['other']=s
@@ -168,7 +168,7 @@ def replaceeprint(eprint,texkey,s):
 
 def ExtractBibkeys(s):
     texkey={}
-    list=[re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\@[Aa]rticle{([a-zA-Z\']*:[0-9a-z]*)',r':::\1:::',s).split('\n')] if j]
+    list=[re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\@[Aa]rticle{([a-zA-Z\'\.]*:[0-9a-z]*)',r':::\1:::',s).split('\n')] if j]
     for i in list: 
         if not texkey.has_key(i):
                 texkey[i]=''
@@ -177,7 +177,7 @@ def ExtractBibkeys(s):
 
 
 def ExtractBibitemkeys(s):
-    return [re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\\bibitem{([a-zA-Z\']*:[0-9a-z]*)}',r':::\1:::',s).split('\n')] if j]
+    return [re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\\bibitem{([a-zA-Z\'\.]*:[0-9a-z]*)}',r':::\1:::',s).split('\n')] if j]
 
 def list2dict(l):
     d={}
