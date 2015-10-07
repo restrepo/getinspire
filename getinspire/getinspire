@@ -34,6 +34,8 @@ import optparse
 
 __version__ = "0.1.0"
 #__call__ example
+texkeyregex=r'[a-zA-Z\'\.\-]*:[0-9a-z]*'
+eptkregex=r'[a-zA-Z:0-9,\/\-._\']*'
 class A:
     '''
     >>> a = A()
@@ -49,7 +51,7 @@ def checkfind(s):
     find={}
     if re.search(r'[0-9]{4}\.[0-9]{4}',s) or re.search(r'[a-z\-\/]*[0-9]{7}',s):
         find['eprint']=s
-    elif re.search('[a-zA-Z\'\.]*:[0-9a-z]*',s):
+    elif re.search(texkeyregex,s):
         find['texkey']=s
     else:
         find['other']=s
@@ -147,7 +149,7 @@ class Cite:
         return self.replace(eprint,texkey,s)
 
     def ExtractTexkeys(self,s):
-        list=[re.sub(':::','',k).split(',') for  k in [j.group() for j in [re.search(':::(.*):::',i) for i in re.sub(r'\\cite{([a-zA-Z:0-9,\/\-._\']*)}','\n:::\\1:::\n',s).split('\n')] if j]]
+        list=[re.sub(':::','',k).split(',') for  k in [j.group() for j in [re.search(':::(.*):::',i) for i in re.sub(r'\\cite{(%s)}' %eptkregex,'\n:::\\1:::\n',s).split('\n')] if j]]
         for i in list: 
             for j in i:
                 if not self.texkey.has_key(j):
@@ -157,18 +159,18 @@ class Cite:
         self.texkeylist=self.texkey.keys()
         
     def replace(self,eprint,texkey,s):
-        s=re.sub(r'(\\cite{[a-zA-Z\':0-9,\/\-._\']*)%s([a-zA-Z\':0-9,\/\-._\']*})' %eprint,r'\1%s\2' %texkey,s)
+        s=re.sub(r'(\\cite{%s)%s(%s})' %(eptkregex,eprint,eptkregex),r'\1%s\2' %texkey,s)
         return s
     
 
 def replaceeprint(eprint,texkey,s):
-    s=re.sub(r'(\\cite{[a-zA-Z\':0-9,\/\-._\']*)%s([a-zA-Z\':0-9,\/\-._\']*})' %eprint,r'\1%s\2' %texkey,s)
+    s=re.sub(r'(\\cite{%s)%s(%s})' %(eptkregex,eprint,eptkregex),r'\1%s\2' %texkey,s)
     return s
 
 
 def ExtractBibkeys(s):
     texkey={}
-    list=[re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\@[Aa]rticle{([a-zA-Z\'\.]*:[0-9a-z]*)',r':::\1:::',s).split('\n')] if j]
+    list=[re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\@[Aa]rticle{(%s)' %texkeyregex,r':::\1:::',s).split('\n')] if j]
     for i in list: 
         if not texkey.has_key(i):
                 texkey[i]=''
@@ -177,7 +179,7 @@ def ExtractBibkeys(s):
 
 
 def ExtractBibitemkeys(s):
-    return [re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\\bibitem{([a-zA-Z\'\.]*:[0-9a-z]*)}',r':::\1:::',s).split('\n')] if j]
+    return [re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\\bibitem{(%s)}' %texkeyregex,r':::\1:::',s).split('\n')] if j]
 
 def list2dict(l):
     d={}
