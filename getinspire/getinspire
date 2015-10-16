@@ -112,8 +112,8 @@ class Record:
         BibTeX=inspirehtml(search,'hx')
             
         #get texkey value
-        if re.search(r'@article{(.*),',BibTeX):
-            Bibtexkey=re.search(r'@article{(.*),',BibTeX).groups()[0]
+        if re.search(r'@[A-Za-z]+{(.*),',BibTeX):
+            Bibtexkey=re.search(r'@[A-Za-z]+{(.*),',BibTeX).groups()[0]
             
         #get eprint value
         if re.search('eprint\s*=(.*),',BibTeX):
@@ -170,7 +170,7 @@ def replaceeprint(eprint,texkey,s):
 
 def ExtractBibkeys(s):
     texkey={}
-    list=[re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\@[Aa]rticle{(%s)' %texkeyregex,r':::\1:::',s).split('\n')] if j]
+    list=[re.sub(':::','',j.group()) for j in [re.search(':::(.*):::',i) for i in re.sub(r'\@[A-Za-z]+{(%s),' %texkeyregex,r':::\1:::',s).split('\n')] if j]
     for i in list: 
         if not texkey.has_key(i):
                 texkey[i]=''
@@ -221,10 +221,8 @@ def insert_BibTeXRecord_to_bib_file(Cite,bibfile):
     f.close()
 
     f=open(bibfile,'a') #preparing to append to bib file
-
     #Extract BibTeX Keys from bib file (as dictionary):
     bibtexfile_keys=ExtractBibkeys(art)
-
 
     newbib=Record()
     
