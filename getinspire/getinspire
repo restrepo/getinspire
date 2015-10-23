@@ -25,7 +25,7 @@ Examples:
 '''
 #check: http://www.ianhuston.net/2012/06/pyinspire-python-script-to-access-inspire-database
 #from __future__ import print_function
-import urllib
+import urllib2
 import time
 import re
 import sys
@@ -72,10 +72,12 @@ def inspirehtml(value,formath):
         
     searchurl=r'http://inspirehep.net/search?ln=es&p=find+%s+%s&of=%s'\
                %(find,value,formath)
-    f = urllib.urlopen(searchurl)
+    f = urllib2.urlopen(searchurl)
     # Read from the object, storing the page's contents in 's'.
     s = f.read()
     f.close()
+    if re.search('403 Forbidden',s)>0:
+        sys.exit('Blocked by inspire: 403 Forbidden')
     #get the <pre> tag contents:
     if re.search('<pre>',s)>0:
         s=s.split('<pre>')[1].split('</pre>')[0]
@@ -190,6 +192,7 @@ def list2dict(l):
         
     
 def replace_eprint2texkeys(Cite,s):
+
     bibentry=Record()
     for i in Cite.texkey.iterkeys():
         if checkfind(i).has_key('eprint'):
@@ -204,7 +207,7 @@ def replace_eprint2texkeys(Cite,s):
             #replace eprint by texkeys in LaTeX file
             s=replaceeprint(i,bibentry.texkey[i],s)
             print 'Replacing %s by %s in LaTeX file' %(i,bibentry.texkey[i])
-            
+
     return s
 
 def insert_BibTeXRecord_to_bib_file(Cite,bibfile):
@@ -447,12 +450,12 @@ if __name__ == '__main__':
 
     if not thebibliography:
         uns=s+'\n'
-        uns=re.sub('%(.*)\n','\n',uns)
-
+        uns=re.sub('%(.*)\n','\n',uns) #drop comments
         if re.search(r'\\bibliography{(.*)}',uns):
             bibfile=re.search(r'\\bibliography{(.*)}',uns).groups()[0]
             if not re.search('\.bib',bibfile):
                 bibfile=bibfile+'.bib'
+
         else:
             print """ERROR: LaTeX File not seem to be using bibtex.
             Use -t option for \\begin{thebibliography} style
@@ -468,6 +471,7 @@ if __name__ == '__main__':
     #Extract cite keys from LaTeX file (as list)
     cites=Cite()
     cites.ExtractTexkeys(s)
+
     #====replace eprints by texkeys============
     news=replace_eprint2texkeys(cites,s)
     #write latexfile
