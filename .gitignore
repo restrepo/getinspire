@@ -1,0 +1,8 @@
+.idea
+__pycache__
+*.pyc
+*.log
+
+build
+dist
+getinspire.egg-info

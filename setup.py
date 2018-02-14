@@ -8,19 +8,26 @@ $ python setup.py help
 
 
 from setuptools import setup
+import re
+import ast
 
-###############
-VERSION = "0.1.0"
+_version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+with open('getinspire/getinspire.py', 'rb') as f:
+    version = str(ast.literal_eval(_version_re.search(f.read().decode('utf-8')).group(1)))
 
 
 setup_args = dict(name='getinspire',
-                  version=VERSION,
+                  version=version,
                   author='Diego Restrepo',
                   author_email='diego.restrepo@gmail.com',
                   url='https://github.com/rescolo/getinspire',
                   packages=['getinspire'],
-                  scripts=['getinspire/getinspire'],
-                  package_data={},
+                  install_requires=[],
+                  entry_points={
+                      'console_scripts': 'getinspire = getinspire.getinspire:getinspire_main'
+                  },
+                  zip_safe=False,
                   license="Modified BSD license",
                   description="""getinspire queries the INSPIRE HEP database and returns to fill the bibtex o bibitem records of some LaTeX file """,
                   long_description=open('README.rst').read(),

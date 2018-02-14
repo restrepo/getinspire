@@ -382,7 +382,7 @@ Higgs~\cite{hep-ph/0612275,0903.4010,0911.0540}
 \end{document}
     """
 
-if __name__ == '__main__':
+def getinspire_main():
     #********** COMMAND LINE ARGUMENTS
     latexformat='EU'
     appendbli=False
@@ -498,3 +498,5 @@ if __name__ == '__main__':
     #=======================================
     #******************************************
 
+if __name__ == '__main__':
+    exit(getinspire_main())
