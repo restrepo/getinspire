@@ -4,11 +4,11 @@ Get inspire (http://inspirehep.net) records to fill the bibliography of a LaTeX 
 
 BibTeX is assumed as the default format of the LaTeX file.
 The bib file name is obtained from the LaTeX file. The
-missing BibTeX records are ontained from inspire and appended
+missing BibTeX records are obtained from inspire and appended
 to the bib file.
 
 The program requires the \cite key in the "texkey" format
-of inspire (Lastname:yearCODE). However if a \cite has an
+of inspire (LastName:yearCODE). However if a \cite has an
 eprint number as key, like hep-ph/0213456 or 1206:0001, it will
 be automatically converted to a "texkey". Then both the LaTeX
 file and the bib file will be updated.
@@ -21,32 +21,119 @@ the output in an external bbl file (see -t option)
 
 Examples:
  $ getinspire sample_bibtex.tex
- $ getinspire -t sample_latexeu.tex 
+ $ getinspire -t sample_latexeu.tex
 '''
-#check: http://www.ianhuston.net/2012/06/pyinspire-python-script-to-access-inspire-database
-#from __future__ import print_function
-import urllib2
+
+from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
+from enum import Enum
 import time
 import re
 import sys
 import os.path
 import optparse
 
-__version__ = "0.1.0"
-#__call__ example
+from inspire import Inspire, Key
+import getinspire_examples
+
+import pybtex.database
+
+__version__ = "0.2.0"
+
+class FileNotFoundError(IOError):
+    def __init__(self, errors=None, paths=None):
+        self.paths = paths
+        if __debug__:
+            [print(e) for e in errors]
+
+    def __str__(self):
+        return "File not found in search paths " + self.paths.__str__()
+
+
+class MultipleBibError(NotImplementedError):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "currently cannot handle TeX with multiple bib files."
+
+
+class TeX:
+    CITE_REGEX = re.compile(r'(\\cite(\[.*?\])?{(.*?)})', re.DOTALL)
+    CITE_BIB_IN_TEX = re.compile(r'\\bibliography{(.*?)}', re.DOTALL)
+    CITE_BIB_IN_AUX = re.compile(r'\\bibdata{(.*?)}', re.DOTALL)
+
+    def __init__(self, filename):
+        errors = []
+        possible_paths = [filename, filename + '.tex'];
+        for path in possible_paths:
+            try:
+                with open(path, mode='r') as file:
+                    self.text_original = file.read()
+                    self.text = self.text_original
+                    self.filename = path
+                    self.stem = os.path.splitext(path)[0]
+                    break
+            except IOError as e:
+                errors.append(e)
+                pass
+        if errors:
+            raise FileNotFoundError(errors=errors, paths=possible_paths)
+        self._bib_name = None
+        self._bib = None
+
+    def cite_commands(self):
+        return [match[0] for match in self.CITE_REGEX.findall(self.text)]
+
+    def references(self):
+        # Note that the order is very important!
+        refs = OrderedDict()
+        for cite in self.CITE_REGEX.finditer(self.text):
+            for key in re.split(r'\s*,\s*', cite.group(3)):
+                if key not in refs:
+                    refs[key] = Ref(key)
+        return refs
+
+    def aux_name(self):
+        return self.stem + '.aux'
+
+    def bbl_name(self):
+        return self.stem + '.bbl'
+
+    def bib_name(self):
+        if self._bib_name is None:
+            aux_data = self.get_aux()
+            bib_keys = self.CITE_BIB_IN_TEX.findall(self.text) if aux_data is None \
+                       else self.CITE_BIB_IN_AUX.findall(aux_data)
+            stem = None
+            for bib_key in bib_keys:
+                for bib in re.split(r'\s*,\s*', bib_key):
+                    if stem is None:
+                        stem = bib
+                    elif stem != bib:
+                        raise MultipleBibError
+            if stem is None:
+                self._bib_name = False  # for "not found"
+            else:
+                self._bib_name = os.path.join(os.path.dirname(self.filename), stem + '.bib')
+        return self._bib_name
+
+    def get_aux(self):
+        try:
+            with open(self.aux_name(), mode='r') as file:
+                aux_data = file.read()
+        except IOError:
+            aux_data = None
+        return aux_data
+
+    def bib(self):
+        if self._bib is None:
+            self._bib = pybtex.database.parse_file(self.bib_name(), bib_format='bibtex') if self.bib_name() else False
+        return self._bib
+
+
 texkeyregex=r'[a-zA-Z\'\.\-]*:[0-9a-z]*'
 eptkregex=r'[a-zA-Z:0-9,\/\-._\']*'
-class A:
-    '''
-    >>> a = A()
-        initIn
-    >>> a()
-        call
-    '''
-    def __init__(self):
-        print("init")
-    def __call__(self):
-        print("call")
 def checkfind(s):
     find={}
     if re.search(r'[0-9]{4}\.[0-9]{4}',s) or re.search(r'[a-z\-\/]*[0-9]{7}',s):
