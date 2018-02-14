@@ -293,7 +293,7 @@ def replace_eprint2texkeys(Cite,s):
         for i in bibentry.texkey.iterkeys():
             #replace eprint by texkeys in LaTeX file
             s=replaceeprint(i,bibentry.texkey[i],s)
-            print 'Replacing %s by %s in LaTeX file' %(i,bibentry.texkey[i])
+            print('Replacing %s by %s in LaTeX file' %(i,bibentry.texkey[i]))
 
     return s
 
@@ -326,7 +326,7 @@ def insert_BibTeXRecord_to_bib_file(Cite,bibfile):
                 sys.stdout.write('.')
                 if bib!='NotFound':
                     f.write(bib)
-                    print 'Get BibTeX Record for %s from inspire' %i
+                    print('Get BibTeX Record for %s from inspire' %i)
                 else:
                     sys.stdout.write('WARNING: texkey: %s not found in inspire\n' %i)
 
@@ -352,11 +352,11 @@ def replace_bblfile_format_with_inspireLaTeX(bblfile,bbltoinspire,lformat='EU'):
         for i in bibitemlist:
             bib=newbib.getLaTeX(i,lformat)
             time.sleep(0.2)
-            print '.',
+            print('.',)
             if bib!='NotFound':
                 f.write(bib)
                 f.write('\n')
-                print 'Get LaTeX(%s) Record for %s from inspire' %(lformat,i)
+                print('Get LaTeX(%s) Record for %s from inspire' %(lformat,i))
             else:
                 sys.stdout.write('WARNING: texkey: %s not found in inspire\n' %i)
 
@@ -409,11 +409,11 @@ def get_bblfile_from_inspireLaTeX_records(Cite,bblfile,lformat='EU',append=False
         else:    
             bib=newbib.getLaTeX(i,lformat)
             time.sleep(0.2)
-            print '.',
+            print('.',)
             if bib!='NotFound':
                 f.write(bib)
                 f.write('\n')
-                print 'Get LaTeX(%s) Record for %s from inspire' %(lformat,i)
+                print('Get LaTeX(%s) Record for %s from inspire' %(lformat,i))
             else:
                 sys.stdout.write('WARNING: texkey: %s not found in inspire\n' %i)
 
@@ -427,7 +427,7 @@ def getinspire_main():
     latexformat='EU'
     appendbli=False
     if len(sys.argv)==1:
-        print "%s --help" %sys.argv[0]
+        print("%s --help" %sys.argv[0])
         sys.exit()
         
     #Parse command line options
@@ -452,18 +452,18 @@ def getinspire_main():
     (options, args) = parser.parse_args()
 
     if options.show_sample_bibtex:
-        print sample_bibtex()
+        print(sample_bibtex())
         sys.exit()
 
     if options.show_sample_latex:
-        print sample_latex()
+        print(sample_latex())
         sys.exit()
         
     if options.format:
         latexformat=options.format
         
     if len(args)==0 or len(args)>1:
-        print "%s --help" %sys.argv[0]
+        print("%s --help" %sys.argv[0])
         sys.exit()
         
     latexfile=args[-1]
@@ -474,7 +474,7 @@ def getinspire_main():
         latexfile='%s.tex' %latexfile
 
     if not os.path.exists(latexfile):
-        print 'ERROR: No such file: %s' %latexfile
+        print('ERROR: No such file: %s' %latexfile)
         sys.exit()
         
     thebibliography=options.thebibliography
@@ -497,14 +497,14 @@ def getinspire_main():
                 bibfile=bibfile+'.bib'
 
         else:
-            print """ERROR: LaTeX File not seem to be using bibtex.
+            print("""ERROR: LaTeX File not seem to be using bibtex.
             Use -t option for \\begin{thebibliography} style
             or set \\bibliography command in LaTeX file
-            """
+            """)
             sys.exit()
 
         if not os.path.exists(bibfile):
-            print 'WARNING: bibtex file: %s, will be created' %bibfile
+            print('WARNING: bibtex file: %s, will be created' %bibfile)
 
     #*********************************
     
