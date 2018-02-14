@@ -17,7 +17,7 @@ class RecordNotFound(RuntimeWarning):
         self.query = query
 
     def __str__(self):
-        return 'texkey: {} not found in inspire\n'.format(self.query)
+        return 'texkey: {} not found in inspire'.format(self.query)
 
 
 class MultipleRecordsFound(RuntimeWarning):
@@ -27,6 +27,14 @@ class MultipleRecordsFound(RuntimeWarning):
 
     def __str__(self):
         return 'texkey: {} found more than one in inspire, {}'.format(self.query, self.url)
+
+
+class SkipUnknownQuery(RuntimeWarning):
+    def __init__(self, query):
+        self.query = query
+
+    def __str__(self):
+        return 'texkey: {} is skipped because of unknown type'.format(self.query)
 
 
 class InspireHTMLParser(HTMLParser):
@@ -67,7 +75,7 @@ class InspireHTMLParser(HTMLParser):
 
 class Key:
     class Type(Enum):
-        OTHER = 0
+        UNKNOWN = 0
         INSPIRE = 1
         ARXIV = 2
 
@@ -78,49 +86,52 @@ class Key:
 
     @classmethod
     def format(cls, key):  # can I extend an Enum-based class??
-        print(key)
         if cls.INSPIRE_REGEX.match(key):
             return key, cls.Type.INSPIRE
         match = cls.ARXIV_REGEX.match(key)
         if match:
             return match.group(1), cls.Type.ARXIV
         else:
-            return key, cls.Type.OTHER
+            return key, cls.Type.UNKNOWN
+
+    @classmethod
+    def is_unknown(cls, key):
+        return cls.format(key)[1] == cls.Type.UNKNOWN
+
+    @classmethod
+    def is_inspire(cls, key):
+        return cls.format(key)[1] == cls.Type.INSPIRE
+
+    @classmethod
+    def is_arxiv(cls, key):
+        return cls.format(key)[1] == cls.Type.ARXIV
 
 
 class Inspire:
     API = 'https://inspirehep.net/search'
+    LATEX_FORMAT = dict(US='elxu', EU='hlxe')
 
     @classmethod
-    def bibtex(cls, key):
-        return cls.search(cls.get_query(key), 'hx')
+    def fetch_latex(cls, key, output_type='EU'):
+        return cls.fetch(key, cls.LATEX_FORMAT[output_type])
 
     @classmethod
-    def latex_us(cls, key):
-        return cls.search(cls.get_query(key), 'hlxu')
+    def fetch_bibtex(cls, key):
+        return cls.fetch(key, 'hx')
 
     @classmethod
-    def latex_eu(cls, key):
-        return cls.search(cls.get_query(key), 'hlxe')
-
-    @classmethod
-    def get_query(cls, raw_key):
-        (key, key_type) = Key.format(raw_key)
+    def fetch(cls, key, output_format):
+        (bare_key, key_type) = Key.format(key)
         if key_type == Key.Type.INSPIRE:
-            return key
+            query = bare_key
         elif key_type == Key.Type.ARXIV:
-            return 'find eprint {}'.format(key)
+            query = 'find eprint {}'.format(bare_key)
         else:
-            return None
-
-    @classmethod
-    def search(cls, raw_query, output_type):
-        if raw_query is None:
-            return None
+            raise SkipUnknownQuery(key)
 
         params = dict(
-            p=raw_query,
-            of=output_type,
+            p=query,
+            of=output_format,
             ln='en',
             rg=3,
         )
@@ -137,12 +148,8 @@ class Inspire:
         results = parser.pre_list
 
         if len(results) == 0:
-            raise RecordNotFound(raw_query)
+            raise RecordNotFound(key)
         elif len(results) > 1:
-            raise MultipleRecordsFound(raw_query, query_url)
+            raise MultipleRecordsFound(key, query_url)
         else:
-            return results[0]
-
-
-# if __name__ == '__main__':
-#     print(Inspire.bibtex('arxiv:1303.4256'))
+            return results[0].strip()

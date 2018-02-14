@@ -23,7 +23,7 @@ setup_args = dict(name='getinspire',
                   author_email='diego.restrepo@gmail.com',
                   url='https://github.com/rescolo/getinspire',
                   packages=['getinspire'],
-                  install_requires=[],
+                  install_requires=['pybtex'],
                   entry_points={
                       'console_scripts': 'getinspire = getinspire.getinspire:getinspire_main'
                   },
@@ -36,7 +36,8 @@ setup_args = dict(name='getinspire',
                                "License :: OSI Approved :: BSD License",
                                "Operating System :: OS Independent",
                                "Programming Language :: Python",
-                               "Programming Language :: Python :: 2.6",
+                               "Programming Language :: Python :: 2.7",
+                               "Programming Language :: Python :: 3.2",
                                ],
                   )
 
